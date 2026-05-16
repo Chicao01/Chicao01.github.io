@@ -1,0 +1,420 @@
+classdef GUI < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                matlab.ui.Figure
+        SwitchYScale            matlab.ui.control.Switch
+        AvaliarDesviodeAllanparaumespecficoLabel_2  matlab.ui.control.Label
+        ResultSpecificTauLabel  matlab.ui.control.Label
+        OpesLabel               matlab.ui.control.Label
+        SpecificTauEditField    matlab.ui.control.NumericEditField
+        InformeovalordeTauentre10se100sLabel  matlab.ui.control.Label
+        SwitchSpecificTau       matlab.ui.control.Switch
+        AvaliarDesviodeAllanparaumespecficoLabel  matlab.ui.control.Label
+        ClearButton             matlab.ui.control.Button
+        Image                   matlab.ui.control.Image
+        DeltaTabEditField       matlab.ui.control.NumericEditField
+        TaTbKLabel              matlab.ui.control.Label
+        SabEditField            matlab.ui.control.NumericEditField
+        S_abVKLabel             matlab.ui.control.Label
+        A20GainDropDown         matlab.ui.control.DropDown
+        GanhodoA2010Label       matlab.ui.control.Label
+        I1nominalDropDown       matlab.ui.control.DropDown
+        I1nominalDropDownLabel  matlab.ui.control.Label
+        NbDropDown              matlab.ui.control.DropDown
+        NbDropDownLabel         matlab.ui.control.Label
+        N2DropDown              matlab.ui.control.DropDown
+        N2DropDownLabel         matlab.ui.control.Label
+        N1DropDown              matlab.ui.control.DropDown
+        N1DropDownLabel         matlab.ui.control.Label
+        T2CEditField            matlab.ui.control.NumericEditField
+        T2CEditFieldLabel       matlab.ui.control.Label
+        T1CEditField            matlab.ui.control.NumericEditField
+        T1CEditFieldLabel       matlab.ui.control.Label
+        R1DropDown              matlab.ui.control.DropDown
+        R2DropDown              matlab.ui.control.DropDown
+        R2DropDownLabel         matlab.ui.control.Label
+        RunButton               matlab.ui.control.Button
+        R1DropDownLabel         matlab.ui.control.Label
+        ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel  matlab.ui.control.Label
+        UIAxes                  matlab.ui.control.UIAxes
+    end
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Button pushed function: RunButton
+        function RunButtonPushed(app, event)
+            % User inputs
+            R1 = app.R1DropDown.Value;
+            R2 = app.R2DropDown.Value;
+            T1 = app.T1CEditField.Value;
+            T2 = app.T2CEditField.Value;
+            N1 = app.N1DropDown.Value;
+            N2 = app.N2DropDown.Value;
+            Nb = app.NbDropDown.Value;
+            I1 = app.I1nominalDropDown.Value;
+            A20_gain = app.A20GainDropDown.Value;
+            S_ab = app.SabEditField.Value;
+            DeltaT_ab = app.DeltaTabEditField.Value;
+            FlagSpecificTau = app.SwitchSpecificTau.Value;
+            SpecificTau = app.SpecificTauEditField.Value;
+            
+            % Sends the parameter values ​​to the program
+            in_bal_estimator_v3(R1,R2,T1,T2,N1,N2,Nb,I1,A20_gain,S_ab,DeltaT_ab,FlagSpecificTau,SpecificTau);
+
+            % Receives the arrays from the program to plot the graph and the calculated noise (Allan deviation) of the balance current for an specific tau
+            [tauArray, In_balArray,AD4SpecificTau] = in_bal_estimator_v3(R1,R2,T1,T2,N1,N2,Nb,I1,A20_gain,S_ab,DeltaT_ab,FlagSpecificTau,SpecificTau);
+            
+            % Output :: sigma-tau graph (customized configuration)
+            plot(app.UIAxes, tauArray, In_balArray, 'Color', [0.4 0 0.4], 'LineWidth', 2);
+            app.UIAxes.XScale = 'log';
+            app.UIAxes.YScale = 'log';
+            xlabel(app.UIAxes, 'Intervalo de medição \tau (s)');
+            ylabel(app.UIAxes, 'Desvio de Allan (nA)');
+            app.UIAxes.XLim = [10 100];
+            if app.SwitchYScale.Value == "Fixa"
+                app.UIAxes.YLim = [1 100];
+            else
+                app.UIAxes.YLimMode = 'auto';
+            end
+            grid(app.UIAxes, 'on');
+                  
+            % Output :: noise (Allan deviation) of the balance current for an specific tau
+            app.ResultSpecificTauLabel.Text = [num2str(AD4SpecificTau)];
+        end
+
+        % Button pushed function: ClearButton
+        function ClearButtonPushed(app, event)
+            % Reset the graph and the result label that shows the estimated balance current noise (in terms of Allan deviation) for an specific tau
+            cla(app.UIAxes);
+            app.ResultSpecificTauLabel.Text = "";
+            % app.SpecificTauEditField.Value = 10;
+        end
+
+        % Value changed function: SwitchYScale
+        function YScaleMode(app, event)
+            % Toggles the scale mode of the y-axis between fixed and automatic - even after code execution
+            if app.SwitchYScale.Value == "Fixa"
+                app.UIAxes.YLim = [1 100];
+            else
+                app.UIAxes.YLimMode = 'auto';
+            end
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Get the file path for locating images
+            pathToMLAPP = fileparts(mfilename('fullpath'));
+
+            % Create UIFigure and hide until all components are created
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Position = [100 100 1101 643];
+            app.UIFigure.Name = 'MATLAB App';
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.UIFigure);
+            title(app.UIAxes, 'Resultados da simulação')
+            xlabel(app.UIAxes, 'Intervalo de medição τ (s)')
+            ylabel(app.UIAxes, 'Desvio de Allan (nA)')
+            app.UIAxes.XScale = 'log';
+            app.UIAxes.XTickLabel = {'10^{1}'; '10^{2}'};
+            app.UIAxes.XMinorTick = 'on';
+            app.UIAxes.YScale = 'log';
+            app.UIAxes.YMinorTick = 'on';
+            app.UIAxes.XGrid = 'on';
+            app.UIAxes.XMinorGrid = 'on';
+            app.UIAxes.YGrid = 'on';
+            app.UIAxes.YMinorGrid = 'on';
+            app.UIAxes.FontSize = 14;
+            app.UIAxes.Position = [324 122 766 508];
+
+            % Create ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel = uilabel(app.UIFigure);
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.HorizontalAlignment = 'center';
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.WordWrap = 'on';
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.FontSize = 14;
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.FontWeight = 'bold';
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.FontAngle = 'italic';
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.FontColor = [0 0 0];
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.Tooltip = {'Os parâmetros a seguir são de conhecimento do operador do CCC e permitem estimar o ruído da corrente de balance'};
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.Position = [25 472 289 47];
+            app.ParmetrosdeentradaparaoclculodorudodacorrentedebalancedoCCCLabel.Text = 'Parâmetros de entrada para o cálculo do ruído da corrente de balance do CCC';
+
+            % Create R1DropDownLabel
+            app.R1DropDownLabel = uilabel(app.UIFigure);
+            app.R1DropDownLabel.HorizontalAlignment = 'right';
+            app.R1DropDownLabel.Tooltip = {''};
+            app.R1DropDownLabel.Position = [93 445 41 22];
+            app.R1DropDownLabel.Text = 'R1 (Ω)';
+
+            % Create RunButton
+            app.RunButton = uibutton(app.UIFigure, 'push');
+            app.RunButton.ButtonPushedFcn = createCallbackFcn(app, @RunButtonPushed, true);
+            app.RunButton.BackgroundColor = [0 1 1];
+            app.RunButton.FontSize = 24;
+            app.RunButton.FontWeight = 'bold';
+            app.RunButton.Position = [179 573 135 44];
+            app.RunButton.Text = 'RODAR';
+
+            % Create R2DropDownLabel
+            app.R2DropDownLabel = uilabel(app.UIFigure);
+            app.R2DropDownLabel.HorizontalAlignment = 'right';
+            app.R2DropDownLabel.Tooltip = {'R2 é o resistor conectado ao braço slave do CCC'};
+            app.R2DropDownLabel.Position = [93 404 41 22];
+            app.R2DropDownLabel.Text = 'R2 (Ω)';
+
+            % Create R2DropDown
+            app.R2DropDown = uidropdown(app.UIFigure);
+            app.R2DropDown.Items = {'1', '10', '100', '1000', '10000', '12906.4037297'};
+            app.R2DropDown.Tooltip = {'12906.4037297 corresponde à resistência Hall quantizada (QHR) no platô i = 2'};
+            app.R2DropDown.BackgroundColor = [1 1 1];
+            app.R2DropDown.Position = [149 404 100 22];
+            app.R2DropDown.Value = '100';
+
+            % Create R1DropDown
+            app.R1DropDown = uidropdown(app.UIFigure);
+            app.R1DropDown.Items = {'1', '10', '100', '1000', '10000'};
+            app.R1DropDown.Tooltip = {'R1 é o resistor conectado ao braço master do CCC'};
+            app.R1DropDown.BackgroundColor = [1 1 1];
+            app.R1DropDown.Position = [149 445 100 22];
+            app.R1DropDown.Value = '100';
+
+            % Create T1CEditFieldLabel
+            app.T1CEditFieldLabel = uilabel(app.UIFigure);
+            app.T1CEditFieldLabel.HorizontalAlignment = 'right';
+            app.T1CEditFieldLabel.Tooltip = {'Temperatura de R1'};
+            app.T1CEditFieldLabel.Position = [90 361 44 22];
+            app.T1CEditFieldLabel.Text = 'T1 (°C)';
+
+            % Create T1CEditField
+            app.T1CEditField = uieditfield(app.UIFigure, 'numeric');
+            app.T1CEditField.Tooltip = {''};
+            app.T1CEditField.Position = [149 361 100 22];
+            app.T1CEditField.Value = 23;
+
+            % Create T2CEditFieldLabel
+            app.T2CEditFieldLabel = uilabel(app.UIFigure);
+            app.T2CEditFieldLabel.HorizontalAlignment = 'right';
+            app.T2CEditFieldLabel.Tooltip = {'Temperatura de R2'};
+            app.T2CEditFieldLabel.Position = [90 316 44 22];
+            app.T2CEditFieldLabel.Text = 'T2 (°C)';
+
+            % Create T2CEditField
+            app.T2CEditField = uieditfield(app.UIFigure, 'numeric');
+            app.T2CEditField.Tooltip = {'Na resistência Hall quantizada (QHR), T2 é 0 K (-273,15 ºC)'};
+            app.T2CEditField.Position = [149 316 100 22];
+            app.T2CEditField.Value = 23;
+
+            % Create N1DropDownLabel
+            app.N1DropDownLabel = uilabel(app.UIFigure);
+            app.N1DropDownLabel.HorizontalAlignment = 'right';
+            app.N1DropDownLabel.Position = [109 274 25 22];
+            app.N1DropDownLabel.Text = 'N1';
+
+            % Create N1DropDown
+            app.N1DropDown = uidropdown(app.UIFigure);
+            app.N1DropDown.Items = {'1', '2', '4', '8', '16', '32', '80', '320'};
+            app.N1DropDown.Tooltip = {'Número de voltas da bobina do braço master do CCC'};
+            app.N1DropDown.BackgroundColor = [1 1 1];
+            app.N1DropDown.Position = [149 274 100 22];
+            app.N1DropDown.Value = '32';
+
+            % Create N2DropDownLabel
+            app.N2DropDownLabel = uilabel(app.UIFigure);
+            app.N2DropDownLabel.HorizontalAlignment = 'right';
+            app.N2DropDownLabel.Position = [109 233 25 22];
+            app.N2DropDownLabel.Text = 'N2';
+
+            % Create N2DropDown
+            app.N2DropDown = uidropdown(app.UIFigure);
+            app.N2DropDown.Items = {'1', '2', '4', '8', '16', '32', '80', '320', '800', '1600', '2065'};
+            app.N2DropDown.Tooltip = {'Número de voltas da bobina do braço slave do CCC'};
+            app.N2DropDown.BackgroundColor = [1 1 1];
+            app.N2DropDown.Position = [149 233 100 22];
+            app.N2DropDown.Value = '32';
+
+            % Create NbDropDownLabel
+            app.NbDropDownLabel = uilabel(app.UIFigure);
+            app.NbDropDownLabel.HorizontalAlignment = 'right';
+            app.NbDropDownLabel.Position = [109 191 25 22];
+            app.NbDropDownLabel.Text = 'Nb';
+
+            % Create NbDropDown
+            app.NbDropDown = uidropdown(app.UIFigure);
+            app.NbDropDown.Items = {'1', '2'};
+            app.NbDropDown.Tooltip = {'Número de voltas da bobina de balance do CCC'};
+            app.NbDropDown.BackgroundColor = [1 1 1];
+            app.NbDropDown.Position = [149 191 100 22];
+            app.NbDropDown.Value = '1';
+
+            % Create I1nominalDropDownLabel
+            app.I1nominalDropDownLabel = uilabel(app.UIFigure);
+            app.I1nominalDropDownLabel.HorizontalAlignment = 'right';
+            app.I1nominalDropDownLabel.Position = [74 150 60 22];
+            app.I1nominalDropDownLabel.Text = 'I1 nominal';
+
+            % Create I1nominalDropDown
+            app.I1nominalDropDown = uidropdown(app.UIFigure);
+            app.I1nominalDropDown.Items = {'3 mA', '10 mA', '30 mA'};
+            app.I1nominalDropDown.Tooltip = {'Valor nominal da corrente aplicada ao braço master do CCC'};
+            app.I1nominalDropDown.BackgroundColor = [1 1 1];
+            app.I1nominalDropDown.Position = [149 150 100 22];
+            app.I1nominalDropDown.Value = '3 mA';
+
+            % Create GanhodoA2010Label
+            app.GanhodoA2010Label = uilabel(app.UIFigure);
+            app.GanhodoA2010Label.HorizontalAlignment = 'right';
+            app.GanhodoA2010Label.Position = [27 108 107 22];
+            app.GanhodoA2010Label.Text = 'Ganho do A20: 10^';
+
+            % Create A20GainDropDown
+            app.A20GainDropDown = uidropdown(app.UIFigure);
+            app.A20GainDropDown.Items = {'3', '4'};
+            app.A20GainDropDown.Tooltip = {'Ganho do detector de nulo (A20), na forma 10^(x)'};
+            app.A20GainDropDown.BackgroundColor = [1 1 1];
+            app.A20GainDropDown.Position = [149 108 100 22];
+            app.A20GainDropDown.Value = '3';
+
+            % Create S_abVKLabel
+            app.S_abVKLabel = uilabel(app.UIFigure);
+            app.S_abVKLabel.HorizontalAlignment = 'right';
+            app.S_abVKLabel.Position = [64 67 71 22];
+            app.S_abVKLabel.Text = 'S_ab (μV/K)';
+
+            % Create SabEditField
+            app.SabEditField = uieditfield(app.UIFigure, 'numeric');
+            app.SabEditField.Tooltip = {'Coeficiente de Seebeck do material “a” e relação ao material “b” nas conexões'};
+            app.SabEditField.Position = [150 67 100 22];
+            app.SabEditField.Value = 0.2;
+
+            % Create TaTbKLabel
+            app.TaTbKLabel = uilabel(app.UIFigure);
+            app.TaTbKLabel.HorizontalAlignment = 'right';
+            app.TaTbKLabel.Position = [74 25 61 22];
+            app.TaTbKLabel.Text = 'Ta - Tb (K)';
+
+            % Create DeltaTabEditField
+            app.DeltaTabEditField = uieditfield(app.UIFigure, 'numeric');
+            app.DeltaTabEditField.Tooltip = {'Diferença de temperatura entre os materiais “a” e “b” das conexões'};
+            app.DeltaTabEditField.Position = [150 25 100 22];
+            app.DeltaTabEditField.Value = 0.001;
+
+            % Create Image
+            app.Image = uiimage(app.UIFigure);
+            app.Image.Position = [13 526 114 104];
+            app.Image.ImageSource = fullfile(pathToMLAPP, 'inmetro.jpg');
+
+            % Create ClearButton
+            app.ClearButton = uibutton(app.UIFigure, 'push');
+            app.ClearButton.ButtonPushedFcn = createCallbackFcn(app, @ClearButtonPushed, true);
+            app.ClearButton.BackgroundColor = [1 0.9098 0.3922];
+            app.ClearButton.FontSize = 18;
+            app.ClearButton.FontWeight = 'bold';
+            app.ClearButton.Tooltip = {'Limpa o gráfico e o resultado do desvio de Allan para um valor de Tau especificado pelo usuário'};
+            app.ClearButton.Position = [197 526 100 30];
+            app.ClearButton.Text = 'LIMPAR';
+
+            % Create AvaliarDesviodeAllanparaumespecficoLabel
+            app.AvaliarDesviodeAllanparaumespecficoLabel = uilabel(app.UIFigure);
+            app.AvaliarDesviodeAllanparaumespecficoLabel.HorizontalAlignment = 'center';
+            app.AvaliarDesviodeAllanparaumespecficoLabel.WordWrap = 'on';
+            app.AvaliarDesviodeAllanparaumespecficoLabel.Tooltip = {'Permite ao usuário verificar o valor do desvio de Allan ("ruído da corrente de balance") em um tempo Tau específico'};
+            app.AvaliarDesviodeAllanparaumespecficoLabel.Position = [487 35 162 45];
+            app.AvaliarDesviodeAllanparaumespecficoLabel.Text = 'Avaliar Desvio de Allan em um tempo Tau específico?';
+
+            % Create SwitchSpecificTau
+            app.SwitchSpecificTau = uiswitch(app.UIFigure, 'slider');
+            app.SwitchSpecificTau.Items = {'Não', 'Sim'};
+            app.SwitchSpecificTau.Tooltip = {''};
+            app.SwitchSpecificTau.Position = [545 16 45 20];
+            app.SwitchSpecificTau.Value = 'Não';
+
+            % Create InformeovalordeTauentre10se100sLabel
+            app.InformeovalordeTauentre10se100sLabel = uilabel(app.UIFigure);
+            app.InformeovalordeTauentre10se100sLabel.HorizontalAlignment = 'right';
+            app.InformeovalordeTauentre10se100sLabel.WordWrap = 'on';
+            app.InformeovalordeTauentre10se100sLabel.Tooltip = {'Os valores aqui inseridos serão arredondados para o inteiro mais próximo'};
+            app.InformeovalordeTauentre10se100sLabel.Position = [664 14 158 59];
+            app.InformeovalordeTauentre10se100sLabel.Text = 'Informe o valor de Tau (entre 10 s e 100 s) para o qual o desvio de Allan será avaliado';
+
+            % Create SpecificTauEditField
+            app.SpecificTauEditField = uieditfield(app.UIFigure, 'numeric');
+            app.SpecificTauEditField.Tooltip = {'Os valores aqui inseridos serão arredondados para o inteiro mais próximo'};
+            app.SpecificTauEditField.Position = [837 41 66 22];
+            app.SpecificTauEditField.Value = 10;
+
+            % Create OpesLabel
+            app.OpesLabel = uilabel(app.UIFigure);
+            app.OpesLabel.BackgroundColor = [0.149 0.902 0.149];
+            app.OpesLabel.HorizontalAlignment = 'center';
+            app.OpesLabel.WordWrap = 'on';
+            app.OpesLabel.FontSize = 15;
+            app.OpesLabel.FontWeight = 'bold';
+            app.OpesLabel.FontAngle = 'italic';
+            app.OpesLabel.FontColor = [0 0 0];
+            app.OpesLabel.Position = [324 85 766 23];
+            app.OpesLabel.Text = 'Opções';
+
+            % Create ResultSpecificTauLabel
+            app.ResultSpecificTauLabel = uilabel(app.UIFigure);
+            app.ResultSpecificTauLabel.HorizontalAlignment = 'center';
+            app.ResultSpecificTauLabel.VerticalAlignment = 'top';
+            app.ResultSpecificTauLabel.WordWrap = 'on';
+            app.ResultSpecificTauLabel.FontSize = 14;
+            app.ResultSpecificTauLabel.FontWeight = 'bold';
+            app.ResultSpecificTauLabel.Tooltip = {'Nesta área, é exibido o resultado com o desvio de Allan ("ruído da corrente de balance") estimado no tempo Tau especificado pelo usuário'};
+            app.ResultSpecificTauLabel.Position = [923 16 168 53];
+            app.ResultSpecificTauLabel.Text = '';
+
+            % Create AvaliarDesviodeAllanparaumespecficoLabel_2
+            app.AvaliarDesviodeAllanparaumespecficoLabel_2 = uilabel(app.UIFigure);
+            app.AvaliarDesviodeAllanparaumespecficoLabel_2.HorizontalAlignment = 'center';
+            app.AvaliarDesviodeAllanparaumespecficoLabel_2.WordWrap = 'on';
+            app.AvaliarDesviodeAllanparaumespecficoLabel_2.Tooltip = {'Permite que o usuário ajuste a escala do eixo y (ruído da corrente de balance expresso em termos de desvio de Allan)'};
+            app.AvaliarDesviodeAllanparaumespecficoLabel_2.Position = [325 45 162 32];
+            app.AvaliarDesviodeAllanparaumespecficoLabel_2.Text = 'Escala do eixo y';
+
+            % Create SwitchYScale
+            app.SwitchYScale = uiswitch(app.UIFigure, 'slider');
+            app.SwitchYScale.Items = {'Fixa', 'Automática'};
+            app.SwitchYScale.ValueChangedFcn = createCallbackFcn(app, @YScaleMode, true);
+            app.SwitchYScale.Tooltip = {'Com a chave na posição "Fixa", a escala vai de 1 nA a 100 nA). Com a chave na posição "Automática", é possível dar um "zoom" no gráfico'};
+            app.SwitchYScale.Position = [365 23 45 20];
+            app.SwitchYScale.Value = 'Fixa';
+
+            % Show the figure after all components are created
+            app.UIFigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = GUI
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end
