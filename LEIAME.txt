@@ -1,0 +1,10 @@
+DESENVOLVIDO NO MATLAB R2025b
+VERSÃO 1.0 - 15/05/2026
+AUTOR: VINICIUS C. DE OLIVEIRA
+CONTATO P/DÚVIDAS E RELATOS DE BUGS: vcoutinho@inmetro.gov.br
+
+NOTA:
+Valores do ruído (em termos de desvios de Allan) da fonte de corrente de master I1 nas faixas de 30 mA, 10 mA e 3 mA determinados
+experimentalmente (por meio de medições no laboratório e processamento dos dados com o Stable32) e registrados na planilha
+"I_1_Allan_deviations.xlsx".
+O usuário deste programa pode atualizar estes valores na planilha. IMPORTANTE: O NOME DA PLANILHA E DAS ABAS NÃO PODE SER ALTERADO!
