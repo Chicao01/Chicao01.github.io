@@ -1,0 +1,14 @@
+INSTRUÇÕES DE INSTALAÇÃO
+- Caso o computador possua MATLAB R2025b instalado -- baixe e execute o programa GUI.exe
+- Caso o computador não possua MATLAB R2025b instalado -- baixe e execute o instalador MyAppInstaller.exe
+
+REQUISITOS
+- Sistema operacional: Windows 64 bits
+- Usando o instalador (MyAppInstaller.exe), é necessário 2,36 GB de espaço livre em disco e conexão com a Internet durante a instalação
+- Recomendável configurar a aparência do Windows para o modo claro, para melhor visualização (Configurações -> Personalização -> Cores. Em "Escolher o modo padrão do Windows", selecione "Claro")
+
+SEGURANÇA E PRIVACIDADE
+- Extensões .exe podem ser consideradas suspeitas por sofwares antivírus ou pelo Windows SmartScreen. Ao instalar/executar este programa, verifique as mensagens de alerta
+- Verifique se o download de programas com extensão .exe é bloqueado pelo administrador de rede da sua instituição. Caso afirmativo, entre em contato com ele
+- Durante o processo de instalação, estabelece-se conexão com o site mathworks.com (usando as portas TCP 80 e 443). Verifique com o administrador de rede da sua instituição se há bloqueios e solicite liberação, caso necessário
+- Política de Privacidade: https://github.com/Chicao01/Chicao01.github.io/blob/main/politica_de_privacidade.txt
