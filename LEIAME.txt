@@ -12,3 +12,5 @@ SEGURANÇA E PRIVACIDADE
 - Verifique se o download de programas com extensão .exe é bloqueado pelo administrador de rede da sua instituição. Caso afirmativo, entre em contato com ele
 - Durante o processo de instalação, estabelece-se conexão com o site mathworks.com (usando as portas TCP 80 e 443). Verifique com o administrador de rede da sua instituição se há bloqueios e solicite liberação, caso necessário
 - Política de Privacidade: https://github.com/Chicao01/Chicao01.github.io/blob/main/politica_de_privacidade.txt
+
+CONTATO DO DESENVOLVEDOR: vcoutinho@inmetro.gov.br
